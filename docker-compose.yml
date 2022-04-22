@@ -1,0 +1,64 @@
+# Docker Composeファイルのバージョンを指定
+version: "3.9"
+
+# コンテナを設定
+services:
+
+  php:
+    container_name: php
+    # 動作させるDockerfileの置かれたビルドコンテキストを指定
+    build: ./setting/php
+    # workと紐づける事でphpが効くようにする
+    volumes:
+      - ./www:/work
+    depends_on:
+      - db
+
+  httpd:
+    container_name: httpd
+    # Dockerfileを使わず設定はすべて以下に記載する
+    image: httpd:2.4.53
+    ports:
+      - 8081:80
+    volumes:
+      # PHPを作業ディレクトリに紐づけ
+      - ./www:/work
+      - ./setting/apache2/httpd.conf:/usr/local/apache2/conf/httpd.conf
+    # 作業ディレクトリをworkに設定
+    working_dir: /work
+    # PHPコンテナに依存
+    depends_on:
+      - php
+
+  # MySQLを動作させるサービスを設定
+  db:
+    container_name: db
+    build: ./setting/mysql
+    # データベースのデータを永続化ボリュームに紐づけて、コンテナ停止後もデータを残す
+    volumes:
+      - db-store:/var/lib/mysql
+
+  # phpmyadminを動作させるサービスを設定
+  phpmyadmin:
+    container_name: phpmyadmin
+    # Dockerfileを使わず設定はすべて以下に記載する
+    image: phpmyadmin/phpmyadmin
+    # 環境変数でDBのパスワードを表示
+    environment:
+      - PMA_ARBITRARY=1
+      - PMA_HOST=db
+      - PMA_USER=root
+      - PMA_PASSWORD=12345678
+    links:
+      - db
+    ports:
+      - 8082:80
+    volumes:
+      - /sessions
+    depends_on:
+      - db
+
+# 全てのサービス(コンテナ)が参照出来るトップレベルにボリュームを設定
+volumes:
+  # 名前付き永続化ボリュームなのでコンテナをstopしてもコンテナから紐づけられたデータを残る
+  db-store:
