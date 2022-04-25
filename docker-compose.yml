@@ -5,7 +5,6 @@ version: "3.9"
 services:
 
   php:
-    container_name: php
     # 動作させるDockerfileの置かれたビルドコンテキストを指定
     build: ./setting/php
     # workと紐づける事でphpが効くようにする
@@ -15,7 +14,6 @@ services:
       - db
 
   httpd:
-    container_name: httpd
     # Dockerfileを使わず設定はすべて以下に記載する
     image: httpd:2.4.53
     ports:
@@ -32,7 +30,6 @@ services:
 
   # MySQLを動作させるサービスを設定
   db:
-    container_name: db
     build: ./setting/mysql
     # データベースのデータを永続化ボリュームに紐づけて、コンテナ停止後もデータを残す
     volumes:
@@ -40,7 +37,6 @@ services:
 
   # phpmyadminを動作させるサービスを設定
   phpmyadmin:
-    container_name: phpmyadmin
     # Dockerfileを使わず設定はすべて以下に記載する
     image: phpmyadmin/phpmyadmin
     # 環境変数でDBのパスワードを表示
@@ -54,6 +50,7 @@ services:
     ports:
       - 8082:80
     volumes:
+      - ./setting/phpmyadmin/phpmyadmin-misc.ini:/usr/local/etc/php/conf.d/phpmyadmin-misc.ini
       - /sessions
     depends_on:
       - db
